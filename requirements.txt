@@ -1,69 +1,29 @@
+# ============================================
+# REQUIREMENTS BASE - CLV FORECASTING PROJECT
+# ============================================
+
 # Core Data Science
 numpy>=1.24.0
 pandas>=2.0.0
 scikit-learn>=1.3.0
 
-# Advanced ML Models
-xgboost>=2.0.0
-lightgbm>=4.0.0
-catboost>=1.2.0
-
-# Time Series & Forecasting
-prophet>=1.1.0
-statsmodels>=0.14.0
+# CLV Modeling - Librería moderna para BG/NBD, Pareto/NBD, Gamma-Gamma
+lifetimes>=0.11.3
 
 # MLOps & Experiment Tracking
 mlflow>=2.8.0
-dvc>=3.0.0
-dvc-s3>=3.0.0
 
 # API & Web Framework
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
-pydantic>=2.4.0
-python-multipart>=0.0.6
-
-# Data Validation & Quality
-great-expectations>=0.18.0
-pydantic>=2.4.0
 
 # Monitoring & Drift Detection
 evidently>=0.4.0
-prometheus-client>=0.18.0
-
-# Database & Storage
-sqlalchemy>=2.0.0
-psycopg2-binary>=2.9.0
-pymongo>=4.5.0
-
-# Visualization
-matplotlib>=3.7.0
-seaborn>=0.12.0
-plotly>=5.17.0
 
 # Utilities
 python-dotenv>=1.0.0
 pyyaml>=6.0.0
-joblib>=1.3.0
-click>=8.1.0
-tqdm>=4.66.0
 
-# Testing
-pytest>=7.4.0
-pytest-cov>=4.1.0
-pytest-mock>=3.11.0
-httpx>=0.25.0  # For FastAPI testing
-
-# Code Quality
-black>=23.9.0
-flake8>=6.1.0
-isort>=5.12.0
-mypy>=1.5.0
-
-# Jupyter & Notebooks
-jupyter>=1.0.0
-ipykernel>=6.25.0
-notebook>=7.0.0
-
-# Logging
-loguru>=0.7.0
+# Visualization (opcional pero útil para análisis)
+matplotlib>=3.7.0
+seaborn>=0.12.0

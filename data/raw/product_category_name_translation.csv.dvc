@@ -1,0 +1,5 @@
+outs:
+- md5: 4196d142e8f2b9697521fc50c97f626b
+  size: 2613
+  hash: md5
+  path: product_category_name_translation.csv

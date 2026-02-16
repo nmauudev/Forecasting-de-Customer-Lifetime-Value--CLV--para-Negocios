@@ -1,0 +1,5 @@
+outs:
+- md5: 6d8464e41c8e2013955e437b6b4fafbd
+  size: 61273883
+  hash: md5
+  path: olist_geolocation_dataset.csv

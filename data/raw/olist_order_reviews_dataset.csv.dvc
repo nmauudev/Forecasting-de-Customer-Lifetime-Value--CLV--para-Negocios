@@ -1,0 +1,5 @@
+outs:
+- md5: 914066be00d2db0c3d857f071cff1688
+  size: 14451670
+  hash: md5
+  path: olist_order_reviews_dataset.csv

@@ -1,0 +1,5 @@
+outs:
+- md5: 8a2c4244856aab4bde3b8ed81f8ca251
+  size: 9033957
+  hash: md5
+  path: olist_customers_dataset.csv

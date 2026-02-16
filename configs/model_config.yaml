@@ -1,0 +1,176 @@
+# Configuración del Modelo CLV
+# Este archivo define los hiperparámetros y configuraciones para el entrenamiento
+
+# Configuración General
+project:
+  name: "CLV_Forecasting"
+  version: "1.0.0"
+  description: "Customer Lifetime Value Forecasting Model"
+  
+# Configuración de Datos
+data:
+  raw_path: "data/raw/"
+  processed_path: "data/processed/"
+  interim_path: "data/interim/"
+  
+  # Parámetros de división de datos
+  train_test_split:
+    test_size: 0.2
+    random_state: 42
+    stratify: null
+  
+  # Validación temporal (para series de tiempo)
+  temporal_validation:
+    enabled: true
+    n_splits: 5
+    test_months: 3
+
+# Feature Engineering
+features:
+  # Features RFM (Recency, Frequency, Monetary)
+  rfm:
+    enabled: true
+    recency_days: 365
+    frequency_window: 365
+    monetary_aggregation: "sum"
+  
+  # Features de comportamiento
+  behavioral:
+    - "total_purchases"
+    - "avg_purchase_value"
+    - "purchase_frequency"
+    - "days_since_first_purchase"
+    - "days_since_last_purchase"
+    - "customer_tenure"
+  
+  # Features temporales
+  temporal:
+    - "month"
+    - "quarter"
+    - "day_of_week"
+    - "is_weekend"
+    - "season"
+
+# Configuración de Modelos
+models:
+  # XGBoost
+  xgboost:
+    enabled: true
+    params:
+      n_estimators: 100
+      max_depth: 6
+      learning_rate: 0.1
+      subsample: 0.8
+      colsample_bytree: 0.8
+      min_child_weight: 1
+      gamma: 0
+      random_state: 42
+      n_jobs: -1
+  
+  # LightGBM
+  lightgbm:
+    enabled: true
+    params:
+      n_estimators: 100
+      max_depth: 6
+      learning_rate: 0.1
+      num_leaves: 31
+      subsample: 0.8
+      colsample_bytree: 0.8
+      min_child_samples: 20
+      random_state: 42
+      n_jobs: -1
+  
+  # Random Forest
+  random_forest:
+    enabled: false
+    params:
+      n_estimators: 100
+      max_depth: 10
+      min_samples_split: 5
+      min_samples_leaf: 2
+      random_state: 42
+      n_jobs: -1
+
+# Configuración de Entrenamiento
+training:
+  # Métrica de evaluación
+  metrics:
+    - "rmse"
+    - "mae"
+    - "r2"
+    - "mape"
+  
+  # Cross-validation
+  cross_validation:
+    enabled: true
+    n_folds: 5
+    shuffle: true
+    random_state: 42
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    rounds: 10
+    metric: "rmse"
+
+# MLflow Configuration
+mlflow:
+  tracking_uri: "http://localhost:5000"
+  experiment_name: "CLV_Forecasting"
+  run_name_prefix: "clv_model"
+  
+  # Registro de artefactos
+  log_artifacts:
+    - "models"
+    - "plots"
+    - "metrics"
+  
+  # Registro de parámetros
+  log_params: true
+  log_metrics: true
+
+# Configuración de Monitoreo
+monitoring:
+  # Detección de drift
+  drift_detection:
+    enabled: true
+    reference_window: 30  # días
+    current_window: 7     # días
+    threshold: 0.05
+  
+  # Métricas de performance
+  performance_metrics:
+    - "prediction_latency"
+    - "model_accuracy"
+    - "data_quality_score"
+  
+  # Alertas
+  alerts:
+    enabled: true
+    channels:
+      - "email"
+      - "slack"
+
+# Configuración de API
+api:
+  host: "0.0.0.0"
+  port: 8000
+  reload: true
+  workers: 4
+  
+  # Límites de rate limiting
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+  
+  # Timeout
+  timeout: 30  # segundos
+
+# Configuración de Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/clv_forecasting.log"
+  rotation: "10 MB"
+  retention: "30 days"

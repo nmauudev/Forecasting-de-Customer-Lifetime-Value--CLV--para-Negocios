@@ -33,7 +33,7 @@ venv.bak/
 *.ipynb_checkpoints/
 
 # Data files (use DVC instead)
-data/raw/*
+
 data/processed/*
 data/interim/*
 !data/raw/.gitkeep

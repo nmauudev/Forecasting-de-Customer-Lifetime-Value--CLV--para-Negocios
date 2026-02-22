@@ -1,0 +1,297 @@
+# ============================================================
+#  CI — CLV Forecasting · FastAPI + Streamlit
+# ============================================================
+#
+#  Disparadores
+#  ─────────────
+#  • git push  a cualquier rama
+#  • Pull Request hacia main / develop
+#  • Ejecución manual desde la pestaña "Actions"
+#
+#  Jobs
+#  ─────
+#  1. test-api        → instala deps API, valida compilación FastAPI, corre tests
+#  2. test-data       → instala deps datos, corre los tests del pipeline ETL
+#  3. validate-streamlit → instala deps Streamlit, valida compilación de app.py
+#
+# ============================================================
+
+name: CI · CLV Forecasting
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+# Evita ejecuciones solapadas en la misma rama
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ─────────────────────────────────────────────────────────────
+# Variables compartidas
+# ─────────────────────────────────────────────────────────────
+env:
+  PYTHON_VERSION: "3.11"      # versión estable y ampliamente soportada en runners
+
+# ─────────────────────────────────────────────────────────────
+# JOB 1 · Backend FastAPI — tests + compilación
+# ─────────────────────────────────────────────────────────────
+jobs:
+
+  test-api:
+    name: "🧪 Backend API (FastAPI)"
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout del repositorio
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # 2. Configurar Python
+      - name: Configurar Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: requirements.api.txt
+
+      # 3. Instalar dependencias del backend
+      - name: Instalar dependencias del backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.api.txt
+          # Herramientas de testing
+          pip install pytest pytest-asyncio httpx
+
+      # 4. ──────────────────────────────────────────────────
+      #    VALIDACIÓN DE COMPILACIÓN — FastAPI
+      #    Se crean archivos dummy de modelos y tabla RFM
+      #    para que el import-time de main.py no falle por
+      #    archivos faltantes en el runner de CI.
+      # ──────────────────────────────────────────────────────
+      - name: Crear artefactos dummy para compilación
+        run: |
+          python - <<'EOF'
+          import joblib, pandas as pd, numpy as np
+          from pathlib import Path
+          from unittest.mock import MagicMock
+
+          # Directorios
+          Path("models").mkdir(exist_ok=True)
+          Path("data/processed").mkdir(parents=True, exist_ok=True)
+
+          # Modelos dummy funcionales
+          bg_mock = MagicMock()
+          bg_mock.predict.return_value = pd.Series([2.5])
+          bg_mock.conditional_probability_alive.return_value = pd.Series([0.85])
+
+          gg_mock = MagicMock()
+          gg_mock.conditional_expected_average_profit.return_value = pd.Series([180.0])
+
+          joblib.dump(bg_mock,  "models/bg_nbd_model.joblib")
+          joblib.dump(gg_mock, "models/gamma_gamma_model.joblib")
+
+          # Tabla RFM dummy
+          rfm = pd.DataFrame({
+              "frequency": [3.0], "recency": [120.0], "T": [365.0],
+              "monetary_value": [150.0], "clv_12m": [450.0], "prob_activo": [0.9],
+          }, index=pd.Index(["test_client_001"], name="customer_unique_id"))
+          rfm.to_parquet("data/processed/rfm_clv.parquet")
+
+          print("✅ Artefactos dummy creados correctamente.")
+          EOF
+
+      - name: "✅ Verificar compilación de FastAPI (src/api/main.py)"
+        run: |
+          python -c "
+          import sys, importlib
+          # Verificar sintaxis de todos los módulos del paquete api
+          import py_compile
+          py_compile.compile('src/api/main.py', doraise=True)
+          print('✅ src/api/main.py compila sin errores de sintaxis.')
+
+          # Verificar que el módulo se importa correctamente con los dummy models
+          import src.api.main as api_module
+          assert hasattr(api_module, 'app'),        '❌ FastAPI app no encontrada'
+          assert hasattr(api_module, 'predict_clv'), '❌ Endpoint predict_clv no encontrado'
+          assert hasattr(api_module, 'health_check'), '❌ Endpoint health_check no encontrado'
+          print('✅ FastAPI app importada y endpoints verificados.')
+          "
+
+      # 5. Correr tests del backend
+      - name: "🧪 Ejecutar tests del Backend (test_api.py)"
+        run: |
+          python -m pytest tests/test_api.py \
+            -v \
+            --tb=short \
+            --no-header \
+            -q \
+            --junit-xml=reports/test-api.xml
+
+      # 6. Publicar reporte de resultados (siempre, incluso si los tests fallan)
+      - name: Publicar reporte de tests API
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-test-api
+          path: reports/test-api.xml
+          retention-days: 14
+
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 2 · Pipeline de Datos — tests ETL
+  # ─────────────────────────────────────────────────────────────
+
+  test-data:
+    name: "🗄️ Pipeline de Datos (ETL)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: requirements.api.txt
+
+      - name: Instalar dependencias (data stack)
+        run: |
+          python -m pip install --upgrade pip
+          # Solo las dependencias necesarias para el pipeline de datos y tests
+          pip install pandas numpy pyarrow pytest
+
+      - name: "✅ Verificar compilación del pipeline ETL (src/data_pipeline/etl.py)"
+        run: |
+          python -c "
+          import py_compile
+          py_compile.compile('src/data_pipeline/etl.py', doraise=True)
+          print('✅ src/data_pipeline/etl.py compila sin errores de sintaxis.')
+          "
+
+      - name: "🧪 Ejecutar tests del Pipeline de Datos (test_data.py)"
+        run: |
+          python -m pytest tests/test_data.py \
+            -v \
+            --tb=short \
+            --no-header \
+            -q \
+            --junit-xml=reports/test-data.xml
+
+      - name: Publicar reporte de tests datos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-test-data
+          path: reports/test-data.xml
+          retention-days: 14
+
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 3 · Frontend Streamlit — compilación
+  # ─────────────────────────────────────────────────────────────
+
+  validate-streamlit:
+    name: "🎨 Frontend Streamlit"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: requirements.streamlit.txt
+
+      - name: Instalar dependencias del frontend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.streamlit.txt
+
+      # Verificación 1: compilación de sintaxis Python
+      - name: "✅ Verificar sintaxis de app.py (py_compile)"
+        run: |
+          python -c "
+          import py_compile
+          py_compile.compile('src/app/app.py', doraise=True)
+          print('✅ src/app/app.py compila sin errores de sintaxis.')
+          "
+
+      # Verificación 2: todas las dependencias del archivo se pueden importar
+      - name: "✅ Verificar que las dependencias de Streamlit se importan"
+        run: |
+          python -c "
+          import importlib, sys
+
+          deps = {
+              'streamlit':  'streamlit',
+              'plotly':     'plotly.graph_objects',
+              'requests':   'requests',
+              'pandas':     'pandas',
+          }
+
+          failed = []
+          for name, module_path in deps.items():
+              try:
+                  importlib.import_module(module_path)
+                  print(f'  ✅ {name}')
+              except ImportError as e:
+                  print(f'  ❌ {name}: {e}')
+                  failed.append(name)
+
+          if failed:
+              print(f'\n❌ Dependencias faltantes: {failed}')
+              sys.exit(1)
+          else:
+              print('\n✅ Todas las dependencias de Streamlit disponibles.')
+          "
+
+      # Verificación 3: el módulo app.py se puede parsear completamente
+      # sin ejecutarlo (Streamlit arranca automáticamente, no lo importamos)
+      - name: "✅ Verificar AST completo de app.py (ast.parse)"
+        run: |
+          python -c "
+          import ast, sys
+          src = open('src/app/app.py', encoding='utf-8').read()
+          try:
+              tree = ast.parse(src)
+              funciones = [n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]
+              print(f'✅ AST válido — funciones detectadas: {funciones}')
+          except SyntaxError as e:
+              print(f'❌ Error de sintaxis en app.py: {e}')
+              sys.exit(1)
+          "
+
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 4 · Badge resumen — se ejecuta si todos los demás pasan
+  # ─────────────────────────────────────────────────────────────
+
+  ci-success:
+    name: "🏁 CI Completo"
+    runs-on: ubuntu-latest
+    needs: [test-api, test-data, validate-streamlit]
+    if: success()
+
+    steps:
+      - name: "✅ Todos los checks pasaron"
+        run: |
+          echo "========================================"
+          echo "  ✅  CI COMPLETO — todos los jobs OK"
+          echo "========================================"
+          echo ""
+          echo "  🧪 test-api          → PASSED"
+          echo "  🗄️  test-data         → PASSED"
+          echo "  🎨 validate-streamlit → PASSED"
+          echo ""
+          echo "  Rama:    ${{ github.ref_name }}"
+          echo "  Commit:  ${{ github.sha }}"
+          echo "  Autor:   ${{ github.actor }}"

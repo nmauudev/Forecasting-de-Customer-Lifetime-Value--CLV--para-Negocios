@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-02-22T19:40:33.773361+00:00",
+  "reference_rows": 93358,
+  "current_rows": 300,
+  "columns_analyzed": [
+    "frequency",
+    "recency",
+    "T",
+    "monetary_value"
+  ],
+  "column_stats": {
+    "frequency": {
+      "ref_mean": 0.0239,
+      "cur_mean": 0.03,
+      "pct_change": 25.59,
+      "ks_stat": 0.0084,
+      "ks_pvalue": 1.0
+    },
+    "recency": {
+      "ref_mean": 2.6451,
+      "cur_mean": 22.8091,
+      "pct_change": 762.32,
+      "ks_stat": 0.9651,
+      "ks_pvalue": 0.0
+    },
+    "T": {
+      "ref_mean": 240.124,
+      "cur_mean": 242.6967,
+      "pct_change": 1.07,
+      "ks_stat": 0.039,
+      "ks_pvalue": 0.738227
+    },
+    "monetary_value": {
+      "ref_mean": 3.2614,
+      "cur_mean": 3.7578,
+      "pct_change": 15.22,
+      "ks_stat": 0.014,
+      "ks_pvalue": 1.0
+    }
+  },
+  "drift_detected": {
+    "frequency": false,
+    "recency": true,
+    "T": false,
+    "monetary_value": false
+  },
+  "any_drift_detected": true
+}

@@ -221,30 +221,6 @@ mlflow models serve -m models:/clv_model/Production -p 5001
 - **ROI de campañas**: Retorno de inversión basado en predicciones
 - **Lift**: Mejora vs. modelo baseline
 
-## 🔍 Debugging
-
-### Logs
-```bash
-# Ver logs de la aplicación
-tail -f logs/clv_forecasting.log
-
-# Logs de Docker
-docker-compose logs -f
-```
-
-### Problemas Comunes
-
-1. **Error de importación de módulos**
-   - Verificar que estás en el directorio raíz del proyecto
-   - Verificar que el entorno virtual está activado
-
-2. **Error de conexión a base de datos**
-   - Verificar que PostgreSQL está corriendo
-   - Verificar credenciales en `.env`
-
-3. **Error de MLflow**
-   - Verificar que el servidor MLflow está corriendo
-   - Verificar `MLFLOW_TRACKING_URI` en `.env`
 
 ## 📚 Recursos Adicionales
 

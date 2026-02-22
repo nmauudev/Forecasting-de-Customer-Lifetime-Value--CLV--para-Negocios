@@ -143,35 +143,6 @@ Forecasting de Customer Lifetime Value (CLV) para Negocios/
 └── tests/                   ← Pruebas unitarias e integración
 ```
 
-## 🎯 Próximos Pasos Sugeridos
-
-1. **Agregar datos de ejemplo**
-   - Colocar CSV en `data/raw/`
-   - Formato esperado: customer_id, purchase_date, amount
-
-2. **Crear notebook de EDA**
-   ```cmd
-   jupyter notebook
-   ```
-   - Crear `notebooks/01_exploratory_data_analysis.ipynb`
-
-3. **Implementar pipeline de datos**
-   - `src/data_pipeline/ingestion.py`
-   - `src/data_pipeline/cleaning.py`
-
-4. **Desarrollar features RFM**
-   - `src/feature_engineering/rfm_features.py`
-   - Calcular Recency, Frequency, Monetary
-
-5. **Entrenar modelo CLV**
-   - `src/model_ops/train.py`
-   - Usar lifetimes BG/NBD + Gamma-Gamma
-
-6. **Crear API de predicción**
-   - `src/api/main.py`
-   - Endpoints para predicciones en tiempo real
-
-## 📖 Recursos Útiles
 
 ### Documentación
 - [Lifetimes Documentation](https://lifetimes.readthedocs.io/)
@@ -179,43 +150,7 @@ Forecasting de Customer Lifetime Value (CLV) para Negocios/
 - [MLflow Documentation](https://mlflow.org/docs/latest/index.html)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 
-### Tutoriales de CLV con Lifetimes
-- [Customer Lifetime Value with Python](https://towardsdatascience.com/customer-lifetime-value-with-python-3c5e8c4e8d2f)
-- [Probabilistic CLV Modeling](https://www.kaggle.com/code/janiobachmann/customer-lifetime-value-clv-prediction)
 
 ### Papers de Referencia
 - Fader & Hardie (2005): "A Note on Deriving the Pareto/NBD Model"
 - Fader et al. (2005): "RFM and CLV: Using Iso-value Curves for Customer Base Analysis"
-
-## ⚙️ Configuración Adicional (Opcional)
-
-### Instalar Jupyter
-```cmd
-pip install jupyter ipykernel
-python -m ipykernel install --user --name=clv-env
-```
-
-### Instalar herramientas de desarrollo
-```cmd
-pip install pytest black flake8 isort
-```
-
-### Configurar DVC (Data Version Control)
-```cmd
-pip install dvc dvc-s3
-dvc init
-```
-
-## 🎊 ¡Todo Listo!
-
-El entorno está completamente configurado y listo para comenzar el desarrollo del proyecto de forecasting de CLV.
-
-**Comando para empezar**:
-```cmd
-activate.bat
-```
-
----
-
-**Fecha de configuración**: 2026-02-16
-**Estado**: ✅ Completado exitosamente

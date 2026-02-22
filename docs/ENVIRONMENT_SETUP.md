@@ -156,25 +156,6 @@ mlflow experiments list
 3. **Actualizar** `requirements.txt` cuando agregues nuevas dependencias
 4. **Usar** `.env` para variables de entorno sensibles (no commitear)
 
-## 🐛 Troubleshooting
-
-### Problema: No se puede activar el entorno
-**Solución**: Verificar que el entorno fue creado correctamente
-```cmd
-python -m venv venv
-```
-
-### Problema: Módulo no encontrado
-**Solución**: Verificar que el entorno está activado y el paquete instalado
-```cmd
-pip list | findstr nombre-paquete
-```
-
-### Problema: Error de importación
-**Solución**: Reinstalar dependencias
-```cmd
-pip install -r requirements.txt --force-reinstall
-```
 
 ## 📚 Recursos
 
@@ -183,7 +164,4 @@ pip install -r requirements.txt --force-reinstall
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Evidently Documentation](https://docs.evidentlyai.com/)
 
----
 
-**Última actualización**: 2026-02-16
-**Estado**: ✅ Entorno configurado y listo para desarrollo

@@ -1,31 +1,110 @@
 version: '3.8'
 
+# ════════════════════════════════════════════════════════════════════
+#  CLV Forecasting — Orquestación de servicios
+#
+#  Servicios principales (arrancan siempre):
+#    docker-compose up
+#      → api        http://localhost:8000   (FastAPI + Swagger UI)
+#      → frontend   http://localhost:8501   (Streamlit)
+#
+#  Servicios opcionales (arrancan con el perfil "monitoring"):
+#    docker-compose --profile monitoring up
+#      → mlflow     http://localhost:5000
+#      → prometheus http://localhost:9090
+#      → grafana    http://localhost:3000
+# ════════════════════════════════════════════════════════════════════
+
 services:
-  # MLflow Tracking Server
+
+  # ──────────────────────────────────────────────────────────────────
+  # 1. API — Motor de predicción CLV (FastAPI + BG/NBD + Gamma-Gamma)
+  # ──────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: clv_api:latest
+    container_name: clv_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Hot-reload en desarrollo: montamos src, models y data como volúmenes.
+      # En producción se pueden comentar para usar solo lo copiado en la imagen.
+      - ./src:/app/src
+      - ./models:/app/models
+      - ./data/processed:/app/data/processed
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: >
+      uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - clv_network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+
+  # ──────────────────────────────────────────────────────────────────
+  # 2. Frontend — Interfaz Streamlit para el equipo de Marketing
+  # ──────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    image: clv_frontend:latest
+    container_name: clv_frontend
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./src/app:/app/src/app
+    environment:
+      # Nombre del servicio "api" resuelto por la red interna de Docker
+      - API_URL=http://api:8000
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      api:
+        condition: service_healthy
+    command: >
+      streamlit run src/app/app.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true
+    networks:
+      - clv_network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8501/_stcore/health" ]
+      interval: 20s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────
+  # 3. MLflow — Tracking de experimentos  [perfil: monitoring]
+  # ──────────────────────────────────────────────────────────────────
   mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
+    profiles: [ "monitoring" ]
+    image: ghcr.io/mlflow/mlflow:v2.13.0
     container_name: clv_mlflow
+    restart: unless-stopped
     ports:
       - "5000:5000"
     volumes:
-      - ./mlruns:/mlflow/mlruns
-      - ./mlartifacts:/mlflow/mlartifacts
-    environment:
-      - MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow/mlruns/mlflow.db
-      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/mlartifacts
+      - mlflow_data:/mlflow
     command: >
-      mlflow server
-      --host 0.0.0.0
-      --port 5000
-      --backend-store-uri sqlite:///mlflow/mlruns/mlflow.db
-      --default-artifact-root /mlflow/mlartifacts
+      mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////mlflow/mlflow.db --default-artifact-root /mlflow/artifacts
     networks:
       - clv_network
 
-  # PostgreSQL Database
+  # ──────────────────────────────────────────────────────────────────
+  # 4. PostgreSQL  [perfil: monitoring]
+  # ──────────────────────────────────────────────────────────────────
   postgres:
+    profiles: [ "monitoring" ]
     image: postgres:15-alpine
     container_name: clv_postgres
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
@@ -37,44 +116,23 @@ services:
     networks:
       - clv_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U clv_user"]
+      test: [ "CMD-SHELL", "pg_isready -U clv_user" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # FastAPI Application
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: clv_api
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./src:/app/src
-      - ./models:/app/models
-      - ./configs:/app/configs
-    environment:
-      - DATABASE_URL=postgresql://clv_user:clv_password@postgres:5432/clv_database
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      postgres:
-        condition: service_healthy
-      mlflow:
-        condition: service_started
-    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
-    networks:
-      - clv_network
-
-  # Prometheus (Monitoring)
+  # ──────────────────────────────────────────────────────────────────
+  # 5. Prometheus  [perfil: monitoring]
+  # ──────────────────────────────────────────────────────────────────
   prometheus:
+    profiles: [ "monitoring" ]
     image: prom/prometheus:latest
     container_name: clv_prometheus
+    restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -82,10 +140,14 @@ services:
     networks:
       - clv_network
 
-  # Grafana (Visualization)
+  # ──────────────────────────────────────────────────────────────────
+  # 6. Grafana  [perfil: monitoring]
+  # ──────────────────────────────────────────────────────────────────
   grafana:
+    profiles: [ "monitoring" ]
     image: grafana/grafana:latest
     container_name: clv_grafana
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
@@ -94,18 +156,23 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources
     depends_on:
       - prometheus
     networks:
       - clv_network
 
+# ════════════════════════════════════════════════════════════════════
+#  Red interna compartida entre todos los servicios
+# ════════════════════════════════════════════════════════════════════
 networks:
   clv_network:
     driver: bridge
 
+# ════════════════════════════════════════════════════════════════════
+#  Volúmenes persistentes
+# ════════════════════════════════════════════════════════════════════
 volumes:
+  mlflow_data:
   postgres_data:
   prometheus_data:
   grafana_data:

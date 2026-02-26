@@ -1,30 +1,3 @@
-"""
-monitor.py — Monitoreo de Deriva de Datos (Data Drift) con Evidently AI
-========================================================================
-Compara la distribución de los datos RFM con los que recibe la API en
-producción. Si el patrón de gasto de los clientes cambia significativamente,
-el reporte lo señala en rojo.
-
-Uso
----
-    # Modo normal: carga reference de rfm_clv.parquet y current de SQLite
-    python -m src.monitoring.monitor
-
-    # Modo demo: genera datos de producción sintéticos para probar el reporte
-    python -m src.monitoring.monitor --demo
-
-    # Especificar ruta de salida del reporte HTML
-    python -m src.monitoring.monitor --output reports/drift/mi_reporte.html
-
-    # Mínimo de filas en producción para correr el análisis (default: 30)
-    python -m src.monitoring.monitor --min-rows 50
-
-Salida
-------
-    reports/drift/drift_report_<TIMESTAMP>.html   ← reporte visual interactivo
-    reports/drift/drift_summary_<TIMESTAMP>.json  ← resumen en JSON (métricas)
-"""
-
 from __future__ import annotations
 
 import argparse

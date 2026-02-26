@@ -1,26 +1,3 @@
-"""
-test_data.py – Tests del pipeline de datos (ETL Olist)
-=======================================================
-Verifica que el cruce de las tablas de Olist (clientes, órdenes, ítems,
-pagos) no genere IDs duplicados ni rompa la integridad referencial.
-
-Estrategia: los tests trabajan sobre DataFrames sintéticos en memoria,
-de modo que NO acceden al disco ni dependen de los CSVs reales.
-
-Cobertura:
-  ✅ El join orders + items no genera customer_unique_id duplicados
-     para una misma combinación (order_id, order_item_id)
-  ✅ La clave compuesta (order_id, order_item_id) es única después del join
-  ✅ No se filtran clientes válidos por culpa del join (inner join conserva)
-  ✅ Solo quedan filas con order_status = 'delivered'
-  ✅ No hay valores nulos en columnas críticas post-ETL
-  ✅ No hay precios ≤ 0 ni freight_value negativo
-  ✅ La columna revenue = price + freight_value
-  ✅ Órdenes con status distinto de 'delivered' son descartadas
-  ✅ Un customer_id puede aparecer en múltiples órdenes (1-a-N legítimo)
-  ✅ customer_unique_id del CSV de clientes no debe tener duplicados propios
-"""
-
 from __future__ import annotations
 
 import sys

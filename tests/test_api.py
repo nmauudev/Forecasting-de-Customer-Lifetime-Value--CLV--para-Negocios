@@ -1,21 +1,3 @@
-"""
-test_api.py – Tests unitarios del backend FastAPI
-==================================================
-Estrategia: se usan mocks para los modelos BG/NBD y Gamma-Gamma
-y para la tabla RFM, de modo que los tests NO requieren archivos en disco
-ni levantar un servidor real.  El cliente de prueba de FastAPI
-(TestClient de Starlette) simula peticiones HTTP reales.
-
-Cobertura:
-  ✅ GET  /health        → devuelve status=ok
-  ✅ POST /predict-clv   → payload válido → devuelve CLV numérico correcto
-  ✅ POST /predict-clv   → frequency=0    → devuelve CLV sin error (rama else)
-  ✅ POST /predict-clv   → payload inválido (T≤0) → 422, no 500
-  ✅ POST /predict-clv   → valores boundary (frecuencia alta, recency=T)
-  ✅ GET  /customer/{id} → cliente conocido → devuelve CustomerRFM
-  ✅ GET  /customer/{id} → cliente desconocido → 404
-"""
-
 from __future__ import annotations
 
 import sys

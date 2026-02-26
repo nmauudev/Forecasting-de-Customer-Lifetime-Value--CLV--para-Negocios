@@ -1,6 +1,6 @@
 # Verificación del Entorno - CLV Forecasting
 
-## ✅ Estado del Entorno Virtual
+##  Estado del Entorno Virtual
 
 ### Entorno Creado
 - **Ubicación**: `venv/`
@@ -11,47 +11,47 @@
 - **Archivo**: `.env` (creado desde `.env.example`)
 - **Estado**: Configurado ✓
 
-## 📦 Dependencias Instaladas
+##  Dependencias Instaladas
 
 ### Core Data Science
-- ✅ **numpy** 2.4.2
-- ✅ **pandas** 2.3.3
-- ✅ **scikit-learn** 1.8.0
-- ✅ **scipy** 1.17.0
+-  **numpy** 2.4.2
+-  **pandas** 2.3.3
+-  **scikit-learn** 1.8.0
+-  **scipy** 1.17.0
 
 ### CLV Modeling
-- ✅ **lifetimes** 0.11.3
+-  **lifetimes** 0.11.3
   - Modelos: BG/NBD, Pareto/NBD, Gamma-Gamma
   - Para predicción de CLV probabilístico
 
 ### MLOps & Experiment Tracking
-- ✅ **mlflow** 3.9.0
+-  **mlflow** 3.9.0
   - Tracking de experimentos
   - Registro de modelos
   - Versionado de artefactos
 
 ### API Framework
-- ✅ **fastapi** 0.129.0
-- ✅ **uvicorn** 0.40.0
-- ✅ **pydantic** 2.12.5
-- ✅ **starlette** 0.52.1
+-  **fastapi** 0.129.0
+-  **uvicorn** 0.40.0
+-  **pydantic** 2.12.5
+-  **starlette** 0.52.1
 
 ### Monitoring & Drift Detection
-- ✅ **evidently** 0.7.20
+-  **evidently** 0.7.20
   - Detección de drift
   - Monitoreo de calidad de datos
   - Métricas de modelo
 
 ### Utilities
-- ✅ **python-dotenv** 1.2.1
-- ✅ **pyyaml** 6.0.3
+-  **python-dotenv** 1.2.1
+-  **pyyaml** 6.0.3
 
 ### Visualization
-- ✅ **matplotlib** 3.10.8
-- ✅ **seaborn** 0.13.2
-- ✅ **plotly** 5.24.1
+-  **matplotlib** 3.10.8
+-  **seaborn** 0.13.2
+-  **plotly** 5.24.1
 
-## 🚀 Cómo Activar el Entorno
+##  Cómo Activar el Entorno
 
 ### Opción 1: Script de Activación (Recomendado)
 ```cmd
@@ -63,7 +63,7 @@ activate.bat
 venv\Scripts\activate
 ```
 
-## 🧪 Verificar Instalación
+##  Verificar Instalación
 
 Para verificar que todas las dependencias están correctamente instaladas:
 
@@ -71,7 +71,7 @@ Para verificar que todas las dependencias están correctamente instaladas:
 venv\Scripts\python.exe -c "import pandas; import numpy; import sklearn; import lifetimes; import mlflow; import fastapi; import evidently; print('OK: Todo instalado correctamente!')"
 ```
 
-## 📝 Próximos Pasos
+##  Próximos Pasos
 
 1. **Activar el entorno virtual**
    ```cmd
@@ -99,7 +99,7 @@ venv\Scripts\python.exe -c "import pandas; import numpy; import sklearn; import 
    - Crear notebooks en `notebooks/`
    - Desarrollar código en `src/`
 
-## 🔧 Comandos Útiles
+##  Comandos Útiles
 
 ### Gestión de Paquetes
 ```cmd
@@ -149,7 +149,7 @@ mlflow ui --port 5000
 mlflow experiments list
 ```
 
-## ⚠️ Notas Importantes
+##  Notas Importantes
 
 1. **Siempre activar el entorno** antes de trabajar en el proyecto
 2. **No commitear** el directorio `venv/` a Git (ya está en `.gitignore`)
@@ -157,7 +157,7 @@ mlflow experiments list
 4. **Usar** `.env` para variables de entorno sensibles (no commitear)
 
 
-## 📚 Recursos
+##  Recursos
 
 - [Documentación de lifetimes](https://lifetimes.readthedocs.io/)
 - [MLflow Documentation](https://mlflow.org/docs/latest/index.html)

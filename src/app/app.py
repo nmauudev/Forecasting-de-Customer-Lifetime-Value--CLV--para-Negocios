@@ -1,10 +1,3 @@
-"""
-CLV Forecasting — Interfaz Streamlit
-======================================
-Levanta en el puerto 8501.
-Conecta con el backend FastAPI en http://api:8000 (Docker) o http://localhost:8000 (local).
-"""
-
 import os
 import time
 
@@ -12,9 +5,7 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
-# ──────────────────────────────────────────────
-# Configuración de página
-# ──────────────────────────────────────────────
+
 st.set_page_config(
     page_title="CLV Forecasting · Olist",
     page_icon="📊",
@@ -22,14 +13,10 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ──────────────────────────────────────────────
-# URL del backend (env var o fallback a localhost)
-# ──────────────────────────────────────────────
+
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
-# ──────────────────────────────────────────────
-# CSS personalizado — look premium oscuro
-# ──────────────────────────────────────────────
+
 st.markdown(
     """
     <style>
@@ -129,9 +116,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ──────────────────────────────────────────────
-# Helpers
-# ──────────────────────────────────────────────
+
 
 def check_api_health() -> bool:
     try:
@@ -183,9 +168,7 @@ def get_sample_customers() -> list[dict]:
         return []
 
 
-# ──────────────────────────────────────────────
-# Función para generar el gráfico de gauge CLV
-# ──────────────────────────────────────────────
+
 
 def make_gauge_chart(value: float, max_val: float = 500.0) -> go.Figure:
     pct = min(value / max_val, 1.0)
@@ -267,9 +250,7 @@ def make_horizon_bar_chart(results: list[dict]) -> go.Figure:
     return fig
 
 
-# ──────────────────────────────────────────────
-# SIDEBAR
-# ──────────────────────────────────────────────
+
 with st.sidebar:
     st.markdown("## ⚙️ Panel de Control")
     st.divider()
@@ -304,9 +285,7 @@ with st.sidebar:
     st.caption("CLV Forecasting · BG/NBD + Gamma-Gamma  \n© 2025 · Proyecto Olist")
 
 
-# ──────────────────────────────────────────────
-# MAIN
-# ──────────────────────────────────────────────
+
 st.markdown('<div class="hero-title">📊 CLV Forecasting Dashboard</div>', unsafe_allow_html=True)
 st.markdown(
     '<div class="hero-sub">Predecí el Customer Lifetime Value a 12 meses usando modelos BG/NBD y Gamma-Gamma entrenados sobre datos de Olist.</div>',
@@ -320,9 +299,7 @@ for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# ─────────────────────────────────────────────
-# MODO 1: Buscar cliente por ID
-# ─────────────────────────────────────────────
+
 if "Buscar" in mode:
     col_id, col_btn = st.columns([4, 1])
     with col_id:
@@ -334,7 +311,7 @@ if "Buscar" in mode:
     with col_btn:
         buscar = st.button("Buscar", key="btn_buscar")
 
-    # Muestra de IDs disponibles
+    
     with st.expander("🔎 Ver muestra de clientes disponibles"):
         if st.button("Cargar muestra", key="btn_sample"):
             sample = get_sample_customers()
@@ -359,9 +336,7 @@ if "Buscar" in mode:
 
     st.divider()
 
-# ─────────────────────────────────────────────
-# SLIDERS RFM (compartidos por ambos modos)
-# ─────────────────────────────────────────────
+
 st.markdown("### 🎛️ Valores RFM del Cliente")
 
 col1, col2 = st.columns(2)
@@ -395,9 +370,7 @@ with col2:
 
 st.divider()
 
-# ─────────────────────────────────────────────
-# BOTÓN PREDECIR
-# ─────────────────────────────────────────────
+
 col_pred, col_space = st.columns([2, 5])
 with col_pred:
     predict_btn = st.button("🚀 Predecir CLV", key="btn_predict", disabled=not api_ok)
@@ -413,7 +386,7 @@ if predict_btn:
             st.divider()
             st.markdown("## 📈 Resultados de la Predicción")
 
-            # ── Métricas en cards ──
+            
             c1, c2, c3, c4 = st.columns(4)
             with c1:
                 st.markdown(f"""
@@ -447,7 +420,7 @@ if predict_btn:
 
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # ── Gauge + Horizons ──
+            
             chart_col, horizon_col = st.columns([1, 1])
 
             with chart_col:
@@ -455,7 +428,7 @@ if predict_btn:
                 st.plotly_chart(fig_gauge, use_container_width=True)
 
             with horizon_col:
-                # Calcular CLV para todos los horizontes seleccionados + 12m
+                
                 all_horizons = sorted(set([12] + (extra_horizons or [])))
                 horizon_results = []
 
@@ -469,7 +442,7 @@ if predict_btn:
                     fig_bar = make_horizon_bar_chart(horizon_results)
                     st.plotly_chart(fig_bar, use_container_width=True)
 
-            # ── Detalle técnico ──
+            
             with st.expander("🔬 Ver detalle técnico completo"):
                 st.json(result)
                 st.caption(

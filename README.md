@@ -1,10 +1,10 @@
-# 📊 CLV Forecasting — Customer Lifetime Value para Negocios
+#  CLV Forecasting — Customer Lifetime Value para Negocios
 
 Sistema de predicción de **Customer Lifetime Value (CLV)** basado en modelos probabilísticos BG/NBD y Gamma-Gamma, con API REST, interfaz web Streamlit y monitoreo de deriva de datos con Evidently AI.
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+##  Arquitectura del Sistema
 
 ```
 ┌─────────────────┐   HTTP requests    ┌────────────────────────┐
@@ -33,15 +33,15 @@ Sistema de predicción de **Customer Lifetime Value (CLV)** basado en modelos pr
                                        └────────────────────────┘
 ```
 
-## 🗂️ Estructura del Proyecto
+##  Estructura del Proyecto
 
 ```
-📁 Forecasting de Customer Lifetime Value (CLV) para Negocios/
+ Forecasting de Customer Lifetime Value (CLV) para Negocios/
 │
-├── 📁 .github/workflows/
+├──  .github/workflows/
 │   └── ci.yml                    ← Pipeline CI (GitHub Actions)
 │
-├── 📁 data/
+├──  data/
 │   ├── raw/                      ← CSVs originales del dataset Olist
 │   ├── processed/                ← Parquets generados por el pipeline
 │   │   ├── clean_transactions.parquet
@@ -51,19 +51,19 @@ Sistema de predicción de **Customer Lifetime Value (CLV)** basado en modelos pr
 │       ├── requests.db           ← SQLite (fuente principal)
 │       └── requests.csv          ← CSV backup legible
 │
-├── 📁 models/
+├──  models/
 │   ├── bg_nbd_model.joblib       ← Modelo BG/NBD entrenado
 │   └── gamma_gamma_model.joblib  ← Modelo Gamma-Gamma entrenado
 │
-├── 📁 notebooks/
+├──  notebooks/
 │   └── rfm_y_modelado_clv.py     ← Script de modelado exploratorio
 │
-├── 📁 reports/
+├──  reports/
 │   └── drift/                    ← Reportes de deriva generados
 │       ├── drift_report_<ts>.html
 │       └── drift_summary_<ts>.json
 │
-├── 📁 src/
+├──  src/
 │   ├── api/
 │   │   └── main.py               ← FastAPI app (endpoints + logging)
 │   ├── app/
@@ -77,7 +77,7 @@ Sistema de predicción de **Customer Lifetime Value (CLV)** basado en modelos pr
 │   └── monitoring/
 │       └── monitor.py            ← Monitor de data drift (Evidently)
 │
-├── 📁 tests/
+├──  tests/
 │   ├── test_api.py               ← Tests del backend FastAPI
 │   └── test_data.py              ← Tests del pipeline ETL
 │
@@ -91,7 +91,7 @@ Sistema de predicción de **Customer Lifetime Value (CLV)** basado en modelos pr
 
 ---
 
-## 🚀 Inicio Rápido
+##  Inicio Rápido
 
 ### Prerrequisitos
 
@@ -130,7 +130,7 @@ docker-compose up clv_streamlit
 
 ---
 
-## 📋 Uso del Sistema
+##  Uso del Sistema
 
 ### 1. Correr el Pipeline de Datos
 
@@ -186,7 +186,7 @@ Genera `reports/drift/drift_report_<timestamp>.html` con análisis visual intera
 
 ---
 
-## 🧪 Tests
+##  Tests
 
 ```bash
 # Correr todos los tests
@@ -204,7 +204,7 @@ pytest tests/test_data.py -v
 
 ---
 
-## 🤖 CI Pipeline (GitHub Actions)
+##  CI Pipeline (GitHub Actions)
 
 El pipeline `.github/workflows/ci.yml` se ejecuta automáticamente en cada `push` y `pull_request` a `main`/`develop`:
 
@@ -217,7 +217,7 @@ El pipeline `.github/workflows/ci.yml` se ejecuta automáticamente en cada `push
 
 ---
 
-## 📈 Metodología CLV
+##  Metodología CLV
 
 ### Modelos Implementados
 
@@ -252,7 +252,7 @@ Test estadístico: **Kolmogorov-Smirnov** por columna (p < 0.05 → alerta de de
 
 ---
 
-## 🛠️ Stack Tecnológico
+##  Stack Tecnológico
 
 | Área | Herramientas |
 |------|-------------|
@@ -269,7 +269,7 @@ Test estadístico: **Kolmogorov-Smirnov** por columna (p < 0.05 → alerta de de
 
 ---
 
-## 📄 Dataset
+## Dataset
 
 Este proyecto usa el dataset público **[Brazilian E-Commerce (Olist)](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)** de Kaggle.
 
@@ -280,7 +280,7 @@ Archivos requeridos en `data/raw/`:
 
 ---
 
-## 📚 Referencias
+## Referencias
 
 - Fader, P.S. & Hardie, B.G.S. (2005): *"A Note on Deriving the Pareto/NBD Model"*
 - Fader, P.S., Hardie, B.G.S. & Lee, K.L. (2005): *"RFM and CLV"* — Journal of Marketing Research

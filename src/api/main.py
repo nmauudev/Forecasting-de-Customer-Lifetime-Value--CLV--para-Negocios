@@ -1,20 +1,3 @@
-"""
-CLV Forecasting API — Motor de predicción
-==========================================
-Levanta en el puerto 8000.
-  POST /predict-clv        → recibe RFM y devuelve CLV a 12 meses
-  GET  /customer/{id}      → devuelve los valores RFM de un cliente conocido
-  GET  /health             → healthcheck
-  GET  /monitoring/stats   → estadísticas de logs de producción
-
-Logging de producción
----------------------
-Cada request a /predict-clv queda registrado en:
-  • data/production_logs/requests.db   (SQLite — fuente principal)
-  • data/production_logs/requests.csv  (CSV plano — backup legible)
-Estos archivos los consume src/monitoring/monitor.py para detectar deriva.
-"""
-
 import csv
 import sqlite3
 import threading
@@ -29,15 +12,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-# ──────────────────────────────────────────────
-# Configuración de logging
-# ──────────────────────────────────────────────
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
 
-# ──────────────────────────────────────────────
-# Rutas (relativas a la raíz del proyecto)
-# ──────────────────────────────────────────────
+
 BASE_DIR = Path(__file__).resolve().parents[2]   # raíz del proyecto
 MODEL_DIR = BASE_DIR / "models"
 DATA_DIR  = BASE_DIR / "data" / "processed"
@@ -47,16 +26,14 @@ BG_NBD_PATH       = MODEL_DIR / "bg_nbd_model.joblib"
 GAMMA_GAMMA_PATH  = MODEL_DIR / "gamma_gamma_model.joblib"
 RFM_CLV_PATH      = DATA_DIR  / "rfm_clv.parquet"
 
-# Rutas de logs de producción (para monitoreo con Evidently)
+
 PROD_DB_PATH  = LOGS_DIR / "requests.db"
 PROD_CSV_PATH = LOGS_DIR / "requests.csv"
 
-# Lock para escrituras concurrentes seguras
+
 _db_lock = threading.Lock()
 
-# ──────────────────────────────────────────────
-# Carga de modelos (una sola vez al arrancar)
-# ──────────────────────────────────────────────
+
 logger.info("Cargando modelos…")
 try:
     bg_nbd_model    = joblib.load(BG_NBD_PATH)
@@ -66,9 +43,7 @@ except Exception as exc:
     logger.error("❌ Error al cargar los modelos: %s", exc)
     raise RuntimeError(f"No se pudieron cargar los modelos: {exc}") from exc
 
-# ──────────────────────────────────────────────
-# Carga de la tabla RFM pre-computada
-# ──────────────────────────────────────────────
+
 logger.info("Cargando tabla RFM…")
 try:
     rfm_df = pd.read_parquet(RFM_CLV_PATH)
@@ -77,9 +52,7 @@ except Exception as exc:
     logger.warning("⚠️  No se pudo cargar la tabla RFM: %s. El endpoint /customer no estará disponible.", exc)
     rfm_df = None
 
-# ──────────────────────────────────────────────
-# Logging de producción — SQLite + CSV
-# ──────────────────────────────────────────────
+
 
 def _init_production_logs() -> None:
     """
@@ -107,7 +80,7 @@ def _init_production_logs() -> None:
         """)
         con.commit()
 
-    # CSV (cabecera solo si el archivo es nuevo)
+    
     if not PROD_CSV_PATH.exists() or PROD_CSV_PATH.stat().st_size == 0:
         with open(PROD_CSV_PATH, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
@@ -169,15 +142,13 @@ def _log_request(
         logger.warning("No se pudo registrar el request en los logs: %s", exc)
 
 
-# Inicializar sistema de logs al arrancar
+
 try:
     _init_production_logs()
 except Exception as _log_init_exc:
     logger.warning("No se pudo inicializar el sistema de logs: %s", _log_init_exc)
 
-# ──────────────────────────────────────────────
-# Aplicación FastAPI
-# ──────────────────────────────────────────────
+
 app = FastAPI(
     title="CLV Forecasting API",
     description="Motor de predicción de Customer Lifetime Value a 12 meses usando BG/NBD + Gamma-Gamma.",
@@ -193,9 +164,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ──────────────────────────────────────────────
-# Esquemas de datos
-# ──────────────────────────────────────────────
+
 
 class RFMInput(BaseModel):
     """
@@ -231,9 +200,7 @@ class CustomerRFM(BaseModel):
     prob_activo:           float
 
 
-# ──────────────────────────────────────────────
-# Endpoints
-# ──────────────────────────────────────────────
+
 
 @app.get("/health", tags=["Utilidades"])
 def health_check():
@@ -248,7 +215,7 @@ def predict_clv(data: RFMInput):
     para el horizonte de `months` meses (por defecto 12).
     """
     try:
-        # ── 1. Construir el DataFrame de entrada en el formato que esperan los modelos
+        
         rfm_row = pd.DataFrame([{
             "frequency":      data.frequency,
             "recency":        data.recency,
@@ -264,7 +231,7 @@ def predict_clv(data: RFMInput):
                 return float(val.item())
             return float(val)
 
-        # ── 2. Predicciones con BG/NBD
+        
         expected_purchases = _to_float(
             bg_nbd_model.predict(
                 t=data.months * 30,        # convertir meses → días aproximados
@@ -282,8 +249,7 @@ def predict_clv(data: RFMInput):
             )
         )
 
-        # ── 3. Valor monetario esperado con Gamma-Gamma
-        #      (solo tiene sentido si el cliente ha comprado al menos una vez)
+        
         if data.frequency > 0 and data.monetary_value > 0:
             expected_avg_revenue = _to_float(
                 gamma_gamma_model.conditional_expected_average_profit(
@@ -294,8 +260,7 @@ def predict_clv(data: RFMInput):
         else:
             expected_avg_revenue = float(data.monetary_value)
 
-        # ── 4. CLV = compras esperadas × revenue esperado por compra
-        #          (ajuste de descuento ya incorporado en el modelo GG)
+        
         clv_predicted = expected_purchases * expected_avg_revenue
 
         logger.info(
@@ -311,7 +276,7 @@ def predict_clv(data: RFMInput):
             horizon_months=data.months,
         )
 
-        # ── Guardar request en logs de producción (para monitoreo) ────────
+        
         _log_request(data, output)
 
         return output
